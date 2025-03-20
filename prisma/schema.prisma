@@ -1,0 +1,77 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Roles {
+  role_id   Int    @id @default(autoincrement())
+  role_name String @unique
+  users     User[]
+}
+
+model CompanyMaster {
+  company_id     Int      @id @default(autoincrement())
+  company_name   String
+  logo           String?
+  favicon        String?
+  contact_email  String   @unique
+  contact_number String
+  address        String
+  created_at     DateTime @default(now())
+  updated_at     DateTime @updatedAt
+
+  // Relation to User Table
+  users User[]
+
+  // Relation to SubscriberManagement Table (Fix for error)
+  subscribers SubscriberManagement[]
+}
+
+model User {
+  user_id       Int      @id @default(autoincrement())
+  company_id    Int
+  user_name     String
+  employee_id   Int
+  user_email    String   @unique
+  user_password String
+  user_role     Int
+  created_at    DateTime @default(now())
+  is_active     Boolean  @default(true)
+  updated_at    DateTime @updatedAt
+
+  // Define relation to Roles table
+  role Roles @relation(fields: [user_role], references: [role_id])
+
+  // Define relation to CompanyMaster table
+  company CompanyMaster @relation(fields: [company_id], references: [company_id])
+
+  // Add this relation to link Blog → User
+  blogs Blog[]
+}
+
+model SubscriberManagement {
+  id                Int      @id @default(autoincrement())
+  subscriber_email  String   @unique
+  company_id        Int?
+  subscription_date DateTime @default(now())
+  updated_at        DateTime @updatedAt
+  is_active         Boolean  @default(true)
+
+  // Define relation to CompanyMaster
+  company CompanyMaster? @relation(fields: [company_id], references: [company_id])
+}
+
+model Blog {
+  id           Int      @id @default(autoincrement())
+  user_id      Int
+  blog_content Json
+  active       Boolean  @default(true)
+  created_at   DateTime @default(now())
+  updated_at   DateTime @updatedAt
+
+  user         User     @relation(fields: [user_id], references: [user_id])
+}
